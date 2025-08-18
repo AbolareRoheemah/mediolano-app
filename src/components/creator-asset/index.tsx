@@ -19,6 +19,7 @@ import { OverviewTab } from "@/components/asset/overview-tab";
 import { LicenseTab } from "@/components/asset/license-tab";
 import { OwnerTab } from "@/components/asset/owner-tab";
 import { AssetTimelineTab } from "./creator-asset-timeline-tab";
+import { useGetToken } from "@/hooks/use-collection"; // <-- import the hook
 
 interface AssetPageProps {
   params: Promise<{
@@ -31,7 +32,7 @@ export default function CreatorAssetPage({ params }: AssetPageProps) {
   const resolvedParams = use(params);
   const { id } = resolvedParams;
 
-  const tokenId = id || 0; // Default to 0 if id is not provided // need improve
+  const tokenId = id || "0x00"; // Default to 0 if id is not provided // need improve
 
   const [metadata, setMetadata] = useState<NFTMetadata | null>(null);
   const { account, address } = useAccount();
@@ -72,6 +73,44 @@ export default function CreatorAssetPage({ params }: AssetPageProps) {
     address: CONTRACT_ADDRESS,
     args: [tokenId],
   });
+
+  // --- Use useGetToken hook to fetch token data ---
+  const { fetchToken } = useGetToken();
+  const [tokenData, setTokenData] = useState<any>(null);
+  const [tokenDataLoading, setTokenDataLoading] = useState(false);
+  const [tokenDataError, setTokenDataError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let ignore = false;
+    async function getTokenData() {
+      setTokenDataLoading(true);
+      setTokenDataError(null);
+      try {
+        // tokenId may be string or number, ensure string
+        const tokenIdStr = typeof tokenId === "string" ? tokenId : String(tokenId);
+        const data = await fetchToken(tokenIdStr);
+        if (!ignore) setTokenData(data);
+      } catch (err: any) {
+        if (!ignore) setTokenDataError(err?.message || "Failed to fetch token data");
+      } finally {
+        if (!ignore) setTokenDataLoading(false);
+      }
+    }
+    if (tokenId) {
+      getTokenData();
+    }
+    return () => { ignore = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tokenId, fetchToken]);
+
+  // Optionally log tokenData for debugging
+  useEffect(() => {
+    if (tokenData !== undefined && tokenData !== null) {
+      console.log("useGetToken tokenData:", tokenData);
+    }
+    console.log("token not returned", tokenData, tokenId)
+
+  }, [tokenData]);
 
   const tokenOwnerAddress = account ? address?.slice(0, 66) : "Unknown";
 
@@ -249,7 +288,8 @@ export default function CreatorAssetPage({ params }: AssetPageProps) {
       royaltyPercentage: 5,
     },
     ipfsCid: ipfsCid,
-    type: assetType, // change to use the new form of search IP type dynamically
+    type: assetType,
+    tokenData
   };
 
   return (
@@ -300,6 +340,12 @@ export default function CreatorAssetPage({ params }: AssetPageProps) {
               <IPTypeInfo
                 asset={{ ...asset, ipfsCid: asset.ipfsCid || undefined }}
               />
+              {tokenDataLoading && (
+                <div className="text-xs text-muted-foreground mt-2">Loading token data...</div>
+              )}
+              {tokenDataError && (
+                <div className="text-xs text-red-500 mt-2">{tokenDataError}</div>
+              )}
             </div>
           </div>
 

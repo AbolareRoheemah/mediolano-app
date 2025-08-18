@@ -221,7 +221,7 @@ function CollectionCard({ collection, onClick }: CollectionCardProps) {
       </div>
       <CardHeader className="pb-2 flex flex-row justify-between items-start">
         <h3 className="text-xl font-bold">{collection.name}</h3>
-        <CollectionActionDropdown collectionId={collection.id} />
+        <CollectionActionDropdown collectionId={String(collection.id)} />
       </CardHeader>
       <CardContent className="pb-2">
         <p className="text-sm text-muted-foreground line-clamp-2">
@@ -245,7 +245,7 @@ function CollectionCard({ collection, onClick }: CollectionCardProps) {
 }
 
 function CollectionListItem({ collection, onClick }: CollectionCardProps) {
-  const isFeatured = isCollectionFeatured(collection.id);
+  const isFeatured = isCollectionFeatured(String(collection.id));
   return (
     <div
       className="flex items-center gap-4 p-4 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors"
@@ -288,14 +288,14 @@ function CollectionListItem({ collection, onClick }: CollectionCardProps) {
             <span>{collection.floorPrice ? `${collection.floorPrice} STRK` : 'No floor price'}</span>
           </div>
         </div>
-        <CollectionActionDropdown collectionId={collection.id} />
+        <CollectionActionDropdown collectionId={String(collection.id)} />
       </div>
     </div>
   )
 }
 
 function FeaturedCollectionCard({ collection, onClick }: CollectionCardProps) {
-  const isFeatured = isCollectionFeatured(collection.id);
+  const isFeatured = isCollectionFeatured(String(collection.id));
   
   return (
     <div className="rounded-xl overflow-hidden border cursor-pointer hover:shadow transition-all" onClick={onClick}>
@@ -318,7 +318,7 @@ function FeaturedCollectionCard({ collection, onClick }: CollectionCardProps) {
           <div>
             <div className="flex justify-between items-start">
               <h2 className="text-xl md:text-2xl font-bold mb-2">{collection.name}</h2>
-              <CollectionActionDropdown collectionId={collection.id} />
+              <CollectionActionDropdown collectionId={String(collection.id)} />
             </div>
             <p className="text-sm text-muted-foreground mb-4 line-clamp-3 md:line-clamp-none">
               {collection.description}

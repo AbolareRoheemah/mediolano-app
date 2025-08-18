@@ -46,8 +46,6 @@ export interface CollectionMetadata {
   last_transfer_time: string;
 }
 
-
-
 export interface UseCollectionReturn {
   createCollection: (formData: ICreateCollection) => Promise<void>;
   isCreating: boolean;
@@ -393,6 +391,42 @@ export function useGetCollections(walletAddress?: `0x${string}`): UseGetCollecti
   }, [loadCollections]);
 
   return { collections, loading, error, reload: loadCollections };
+}
+
+// TokenData structure based on actual contract
+export interface TokenData {
+  collection_id: string;
+  token_id: string;
+  owner: string;
+  metadata_uri: {
+    data: string[]; // array of hex strings
+    pending_word: string;
+    pending_word_len: string;
+  };
+}
+
+export function useGetToken() {
+  const { contract } = useContract({
+    abi: COLLECTION_CONTRACT_ABI as Abi,
+    address: COLLECTION_CONTRACT_ADDRESS as `0x${string}`,
+  });
+
+  const fetchToken = useCallback(
+    async (token: string): Promise<TokenData> => {
+      if (!contract) throw new Error("Contract not ready");
+      try {
+        // The ABI expects a ByteArray for token, so im pass the string directly
+        const tokenData = await contract.call("get_token", [token]);
+        return tokenData as TokenData;
+      } catch (error) {
+        console.error(`Error fetching token ${token}:`, error);
+        throw error;
+      }
+    },
+    [contract]
+  );
+
+  return { fetchToken };
 }
 
 export function useIsCollectionOwner() {
